@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User profiles: each user can only read and write their own profile
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Drivers collection
+    match /drivers/{driverId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(driverId);
+    }
+
+    // Bookings collection:
+    // Passengers can create and view their own bookings.
+    // Drivers can read pending bookings or bookings assigned to them.
+    // Drivers can update booking status (accept / complete).
+    match /bookings/{bookingId} {
+      allow create: if isAuthenticated() && request.resource.data.passengerId == request.auth.uid;
+      allow read: if isAuthenticated() && (
+        resource.data.passengerId == request.auth.uid ||
+        resource.data.driverId == request.auth.uid ||
+        resource.data.status == 'PENDING'
+      );
+      allow update: if isAuthenticated() && (
+        resource.data.passengerId == request.auth.uid ||
+        resource.data.driverId == request.auth.uid ||
+        (resource.data.status == 'PENDING' && request.resource.data.status == 'ACCEPTED')
+      );
+      allow delete: if isAuthenticated() && resource.data.passengerId == request.auth.uid;
+    }
+  }
+}

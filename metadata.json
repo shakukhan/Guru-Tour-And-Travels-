@@ -1,0 +1,6 @@
+{
+  "name": "Guru Tour & Travels",
+  "description": "Travel and cab booking app for Haryana, India connecting passengers and drivers for local and intercity trips.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
